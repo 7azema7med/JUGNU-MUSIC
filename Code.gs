@@ -319,6 +319,111 @@ function getStudentByField(fieldValue, fieldType) {
 }
 
 /**
+ * Get list of all admins
+ */
+function getAllAdmins() {
+  try {
+    const adminsList = Object.keys(ADMIN_CREDENTIALS).map(username => ({
+      username: username,
+      role: username === 'admin' ? 'مدير رئيسي' : username === 'hazem' ? 'مطور النظام' : 'مدير',
+      isActive: true,
+      lastLogin: 'اليوم' // In production, track actual login times
+    }));
+    
+    return { 
+      success: true, 
+      admins: adminsList,
+      total: adminsList.length 
+    };
+  } catch (error) {
+    Logger.log('Error getting admins list: ' + error.toString());
+    return { success: false, message: 'حدث خطأ أثناء جلب قائمة المديرين: ' + error.toString() };
+  }
+}
+
+/**
+ * Update admin password (for future use)
+ */
+function updateAdminPassword(currentUsername, currentPassword, targetUsername, newPassword) {
+  try {
+    // Verify current admin credentials
+    if (!ADMIN_CREDENTIALS[currentUsername] || ADMIN_CREDENTIALS[currentUsername] !== currentPassword) {
+      return { success: false, message: 'بيانات الادمن الحالي غير صحيحة' };
+    }
+    
+    // Check if target admin exists
+    if (!ADMIN_CREDENTIALS[targetUsername]) {
+      return { success: false, message: 'المدير المحدد غير موجود' };
+    }
+    
+    // Update password (in production, save to PropertiesService)
+    ADMIN_CREDENTIALS[targetUsername] = newPassword;
+    
+    return { success: true, message: 'تم تحديث كلمة المرور بنجاح' };
+  } catch (error) {
+    Logger.log('Error updating admin password: ' + error.toString());
+    return { success: false, message: 'حدث خطأ أثناء تحديث كلمة المرور: ' + error.toString() };
+  }
+}
+
+/**
+ * Delete admin (for future use)
+ */
+function deleteAdmin(currentUsername, currentPassword, targetUsername) {
+  try {
+    // Verify current admin credentials
+    if (!ADMIN_CREDENTIALS[currentUsername] || ADMIN_CREDENTIALS[currentUsername] !== currentPassword) {
+      return { success: false, message: 'بيانات الادمن الحالي غير صحيحة' };
+    }
+    
+    // Prevent deleting yourself
+    if (currentUsername === targetUsername) {
+      return { success: false, message: 'لا يمكنك حذف حسابك الخاص' };
+    }
+    
+    // Prevent deleting main admin
+    if (targetUsername === 'admin') {
+      return { success: false, message: 'لا يمكن حذف المدير الرئيسي' };
+    }
+    
+    // Check if target admin exists
+    if (!ADMIN_CREDENTIALS[targetUsername]) {
+      return { success: false, message: 'المدير المحدد غير موجود' };
+    }
+    
+    // Delete admin (in production, remove from PropertiesService)
+    delete ADMIN_CREDENTIALS[targetUsername];
+    
+    return { success: true, message: 'تم حذف المدير بنجاح' };
+  } catch (error) {
+    Logger.log('Error deleting admin: ' + error.toString());
+    return { success: false, message: 'حدث خطأ أثناء حذف المدير: ' + error.toString() };
+  }
+}
+
+/**
+ * Get admin activity stats
+ */
+function getAdminStats() {
+  try {
+    const totalAdmins = Object.keys(ADMIN_CREDENTIALS).length;
+    const activeAdmins = totalAdmins; // In production, track actual active status
+    
+    return {
+      success: true,
+      stats: {
+        total: totalAdmins,
+        active: activeAdmins,
+        lastLogin: 'اليوم' // In production, track actual login times
+      }
+    };
+  } catch (error) {
+    Logger.log('Error getting admin stats: ' + error.toString());
+    return { success: false, message: 'حدث خطأ أثناء جلب إحصائيات المديرين: ' + error.toString() };
+  }
+}
+
+/**
  * Initialize spreadsheet headers if needed
  */
 function initializeSpreadsheet() {
