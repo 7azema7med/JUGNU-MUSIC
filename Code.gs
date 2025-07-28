@@ -84,7 +84,7 @@ function addNewAdmin(currentUsername, currentPassword, newUsername, newPassword)
 }
 
 /**
- * Get spreadsheet data
+ * Get spreadsheet data with proper column mapping
  */
 function getSpreadsheetData() {
   try {
@@ -104,7 +104,21 @@ function getSpreadsheetData() {
     const headers = data[0];
     const rows = data.slice(1);
     
-    return { success: true, data: rows, headers: headers };
+    // Map the data according to your Excel structure
+    const mappedRows = rows.map((row, index) => ({
+      rowIndex: index,
+      email: row[1] || '',           // Column B
+      name: row[2] || '',            // Column C
+      whatsapp: row[3] || '',        // Column D
+      id: row[4] || '',              // Column E
+      invoice: row[5] || '',         // Column F
+      invoiceImage: row[6] || '',    // Column G
+      status: row[8] || '',          // Column I
+      notes: row[9] || '',           // Column J
+      adminSignature: row[10] || ''  // Column K
+    }));
+    
+    return { success: true, data: mappedRows, headers: headers };
   } catch (error) {
     Logger.log('Error getting spreadsheet data: ' + error.toString());
     return { success: false, message: 'حدث خطأ أثناء جلب البيانات: ' + error.toString() };
@@ -112,7 +126,7 @@ function getSpreadsheetData() {
 }
 
 /**
- * Search for student data
+ * Search for student data with enhanced search capabilities
  */
 function searchStudent(searchTerm, searchType) {
   try {
@@ -122,42 +136,40 @@ function searchStudent(searchTerm, searchType) {
     }
     
     const data = result.data;
-    const headers = result.headers;
     
     if (data.length === 0) {
       return { success: true, data: [], message: 'لا توجد بيانات للبحث فيها' };
     }
     
-    // Column mapping based on your requirements
-    const columnMap = {
-      'email': 1,        // B column (index 1)
-      'name': 2,         // C column (index 2)  
-      'whatsapp': 3,     // D column (index 3)
-      'id': 4,           // E column (index 4)
-      'invoice': 5,      // F column (index 5)
-      'all': -1          // Search in all columns
-    };
-    
-    const searchColumn = columnMap[searchType] || -1;
     const searchTermLower = searchTerm.toLowerCase().trim();
     
-    const filteredData = data.filter((row, index) => {
-      if (searchColumn === -1) {
-        // Search in all text columns (B, C, D, E, F)
-        return [1, 2, 3, 4, 5].some(colIndex => {
-          const cellValue = (row[colIndex] || '').toString().toLowerCase();
-          return cellValue.includes(searchTermLower);
-        });
-      } else {
-        const cellValue = (row[searchColumn] || '').toString().toLowerCase();
-        return cellValue.includes(searchTermLower);
+    const filteredData = data.filter(student => {
+      switch(searchType) {
+        case 'email':
+          return student.email.toLowerCase().includes(searchTermLower);
+        case 'name':
+          return student.name.toLowerCase().includes(searchTermLower);
+        case 'whatsapp':
+          return student.whatsapp.toLowerCase().includes(searchTermLower);
+        case 'id':
+          return student.id.toLowerCase().includes(searchTermLower);
+        case 'invoice':
+          return student.invoice.toLowerCase().includes(searchTermLower);
+        case 'all':
+        default:
+          return (
+            student.email.toLowerCase().includes(searchTermLower) ||
+            student.name.toLowerCase().includes(searchTermLower) ||
+            student.whatsapp.toLowerCase().includes(searchTermLower) ||
+            student.id.toLowerCase().includes(searchTermLower) ||
+            student.invoice.toLowerCase().includes(searchTermLower)
+          );
       }
     });
     
     return { 
       success: true, 
       data: filteredData, 
-      headers: headers,
       count: filteredData.length 
     };
   } catch (error) {
@@ -167,7 +179,7 @@ function searchStudent(searchTerm, searchType) {
 }
 
 /**
- * Update student data
+ * Update student data with proper column mapping
  */
 function updateStudentData(rowIndex, updatedData, adminSignature) {
   try {
@@ -181,20 +193,23 @@ function updateStudentData(rowIndex, updatedData, adminSignature) {
     // Add admin signature and timestamp
     const currentTime = new Date();
     const timestamp = Utilities.formatDate(currentTime, Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm:ss');
+    const fullSignature = `${adminSignature} - ${timestamp}`;
     
     // Update the row (rowIndex is 0-based, but sheet rows are 1-based, and we skip header)
     const actualRowIndex = rowIndex + 2; // +1 for header, +1 for 0-based to 1-based
     
-    // Column mapping: B=2, C=3, D=4, E=5, F=6, G=7, I=9, J=10, K=11
-    sheet.getRange(actualRowIndex, 2).setValue(updatedData.email || '');
-    sheet.getRange(actualRowIndex, 3).setValue(updatedData.name || '');
-    sheet.getRange(actualRowIndex, 4).setValue(updatedData.whatsapp || '');
-    sheet.getRange(actualRowIndex, 5).setValue(updatedData.id || '');
-    sheet.getRange(actualRowIndex, 6).setValue(updatedData.invoice || '');
-    // Column G (7) is for image - not updating via text
-    sheet.getRange(actualRowIndex, 9).setValue(updatedData.status || '');
-    sheet.getRange(actualRowIndex, 10).setValue(updatedData.notes || '');
-    sheet.getRange(actualRowIndex, 11).setValue(adminSignature + ' - ' + timestamp);
+    // Update according to your Excel structure:
+    // B = Email, C = Name, D = WhatsApp, E = ID, F = Invoice, I = Status, J = Notes, K = Admin Signature
+    if (updatedData.email !== undefined) sheet.getRange(actualRowIndex, 2).setValue(updatedData.email);
+    if (updatedData.name !== undefined) sheet.getRange(actualRowIndex, 3).setValue(updatedData.name);
+    if (updatedData.whatsapp !== undefined) sheet.getRange(actualRowIndex, 4).setValue(updatedData.whatsapp);
+    if (updatedData.id !== undefined) sheet.getRange(actualRowIndex, 5).setValue(updatedData.id);
+    if (updatedData.invoice !== undefined) sheet.getRange(actualRowIndex, 6).setValue(updatedData.invoice);
+    if (updatedData.status !== undefined) sheet.getRange(actualRowIndex, 9).setValue(updatedData.status);
+    if (updatedData.notes !== undefined) sheet.getRange(actualRowIndex, 10).setValue(updatedData.notes);
+    
+    // Always update admin signature when any change is made
+    sheet.getRange(actualRowIndex, 11).setValue(fullSignature);
     
     return { success: true, message: 'تم تحديث البيانات بنجاح' };
   } catch (error) {
@@ -213,20 +228,10 @@ function getAllStudents() {
       return result;
     }
     
-    const data = result.data;
-    const headers = result.headers;
-    
-    // Add row indices for easier tracking
-    const dataWithIndices = data.map((row, index) => ({
-      rowIndex: index,
-      data: row
-    }));
-    
     return { 
       success: true, 
-      data: dataWithIndices, 
-      headers: headers,
-      total: data.length
+      data: result.data, 
+      total: result.data.length
     };
   } catch (error) {
     Logger.log('Error getting all students: ' + error.toString());
@@ -250,21 +255,27 @@ function getDashboardStats() {
       total: data.length,
       added: 0,
       pending: 0,
-      withNotes: 0
+      withNotes: 0,
+      withInvoiceImage: 0
     };
     
-    data.forEach(row => {
-      // Column I (index 8) - Status
-      const status = (row[8] || '').toString().toLowerCase();
+    data.forEach(student => {
+      // Check status
+      const status = student.status.toLowerCase();
       if (status.includes('تم الاضافة') || status.includes('✅')) {
         stats.added++;
       } else if (status.includes('لم يتم') || status.includes('❌')) {
         stats.pending++;
       }
       
-      // Column J (index 9) - Notes
-      if (row[9] && row[9].toString().trim() !== '') {
+      // Check notes
+      if (student.notes && student.notes.toString().trim() !== '') {
         stats.withNotes++;
+      }
+      
+      // Check invoice image
+      if (student.invoiceImage && student.invoiceImage.toString().trim() !== '') {
+        stats.withInvoiceImage++;
       }
     });
     
@@ -272,5 +283,85 @@ function getDashboardStats() {
   } catch (error) {
     Logger.log('Error getting dashboard stats: ' + error.toString());
     return { success: false, message: 'حدث خطأ أثناء جلب الإحصائيات: ' + error.toString() };
+  }
+}
+
+/**
+ * Get student by specific field
+ */
+function getStudentByField(fieldValue, fieldType) {
+  try {
+    const result = getSpreadsheetData();
+    if (!result.success) {
+      return result;
+    }
+    
+    const data = result.data;
+    const student = data.find(s => {
+      switch(fieldType) {
+        case 'email': return s.email === fieldValue;
+        case 'id': return s.id === fieldValue;
+        case 'whatsapp': return s.whatsapp === fieldValue;
+        case 'invoice': return s.invoice === fieldValue;
+        default: return false;
+      }
+    });
+    
+    if (student) {
+      return { success: true, data: student };
+    } else {
+      return { success: false, message: 'لم يتم العثور على الطالب' };
+    }
+  } catch (error) {
+    Logger.log('Error getting student by field: ' + error.toString());
+    return { success: false, message: 'حدث خطأ أثناء البحث عن الطالب: ' + error.toString() };
+  }
+}
+
+/**
+ * Initialize spreadsheet headers if needed
+ */
+function initializeSpreadsheet() {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(SHEET_NAME);
+    }
+    
+    // Check if headers exist
+    const range = sheet.getRange(1, 1, 1, 11);
+    const headers = range.getValues()[0];
+    
+    if (!headers[1]) { // If column B is empty, set up headers
+      const headerRow = [
+        'A', // Column A
+        'عنوان البريد الإلكتروني', // Column B
+        'اسمك باللغة العربية (رباعي)', // Column C
+        'WhatsApp Number', // Column D
+        'كودك (ID)', // Column E
+        'رقم التسجيل الفاتورة', // Column F
+        'صورة الفاتورة', // Column G
+        'H', // Column H
+        'حالة الاضافة', // Column I
+        'ملاحظات الادمن', // Column J
+        'توقيع الادمن' // Column K
+      ];
+      
+      sheet.getRange(1, 1, 1, headerRow.length).setValues([headerRow]);
+      
+      // Format headers
+      const headerRange = sheet.getRange(1, 1, 1, headerRow.length);
+      headerRange.setBackground('#667eea');
+      headerRange.setFontColor('white');
+      headerRange.setFontWeight('bold');
+      headerRange.setHorizontalAlignment('center');
+    }
+    
+    return { success: true, message: 'تم تهيئة الجدول بنجاح' };
+  } catch (error) {
+    Logger.log('Error initializing spreadsheet: ' + error.toString());
+    return { success: false, message: 'حدث خطأ أثناء تهيئة الجدول: ' + error.toString() };
   }
 }
