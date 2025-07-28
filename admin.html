@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الادمن - نظام إدارة الطلاب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+            direction: rtl;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title i {
+            font-size: 32px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 25px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-white {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-white:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .admin-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card-header h3 {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header p {
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading i {
+            font-size: 24px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .current-admins {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .current-admins h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .admin-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .admin-item {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #667eea;
+            border: 1px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .security-note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .security-note h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .security-note ul {
+            color: #856404;
+            padding-right: 20px;
+            font-size: 14px;
+        }
+
+        .security-note li {
+            margin-bottom: 5px;
+        }
+
+        .developer-credit {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 20px 15px;
+            }
+
+            .admin-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <i class="fas fa-users-cog"></i>
+                <div>
+                    <h1>إدارة الادمن</h1>
+                    <p style="font-size: 14px; opacity: 0.9;">إضافة وإدارة المديرين</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="currentUser">الادمن</span>
+                </div>
+                <a href="?page=dashboard" class="btn btn-white">
+                    <i class="fas fa-arrow-right"></i>
+                    العودة للوحة التحكم
+                </a>
+                <button onclick="logout()" class="btn btn-white">
+                    <i class="fas fa-sign-out-alt"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Current Admins Display -->
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-users"></i>
+                    المديرين الحاليين
+                </h3>
+                <p>قائمة بالمديرين المسجلين حالياً في النظام</p>
+            </div>
+            
+            <div class="current-admins">
+                <h4>المديرين المتاحين:</h4>
+                <div class="admin-list">
+                    <div class="admin-item">
+                        <i class="fas fa-user-shield"></i>
+                        admin
+                    </div>
+                    <div class="admin-item">
+                        <i class="fas fa-user-shield"></i>
+                        hazem
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Information -->
+        <div class="security-note">
+            <h4>
+                <i class="fas fa-shield-alt"></i>
+                معلومات أمنية مهمة
+            </h4>
+            <ul>
+                <li>يجب أن تكون كلمة المرور قوية وتحتوي على أحرف وأرقام</li>
+                <li>لا تشارك بيانات تسجيل الدخول مع أشخاص غير مخولين</li>
+                <li>في النسخة الإنتاجية، يتم حفظ البيانات بشكل مشفر</li>
+                <li>يفضل تغيير كلمات المرور بشكل دوري</li>
+            </ul>
+        </div>
+
+        <!-- Add New Admin Form -->
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-user-plus"></i>
+                    إضافة مدير جديد
+                </h3>
+                <p>أضف مدير جديد للنظام مع صلاحيات كاملة</p>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                يجب تأكيد هويتك أولاً قبل إضافة مدير جديد للنظام
+            </div>
+
+            <form id="addAdminForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="currentUsername">اسم المستخدم الحالي</label>
+                        <input type="text" id="currentUsername" class="form-control" required 
+                               placeholder="ادخل اسم المستخدم الخاص بك">
+                    </div>
+                    <div class="form-group">
+                        <label for="currentPassword">كلمة المرور الحالية</label>
+                        <input type="password" id="currentPassword" class="form-control" required 
+                               placeholder="ادخل كلمة المرور الخاصة بك">
+                    </div>
+                </div>
+
+                <hr style="margin: 25px 0; border: 1px solid #e9ecef;">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newUsername">اسم المستخدم الجديد</label>
+                        <input type="text" id="newUsername" class="form-control" required 
+                               placeholder="ادخل اسم المستخدم للمدير الجديد">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">كلمة المرور الجديدة</label>
+                        <input type="password" id="newPassword" class="form-control" required 
+                               placeholder="ادخل كلمة مرور قوية">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">تأكيد كلمة المرور</label>
+                    <input type="password" id="confirmPassword" class="form-control" required 
+                           placeholder="أعد كتابة كلمة المرور للتأكيد">
+                </div>
+
+                <button type="submit" class="btn btn-success" style="width: 100%; padding: 15px;">
+                    <i class="fas fa-user-plus"></i>
+                    إضافة المدير الجديد
+                </button>
+
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>جاري إضافة المدير الجديد...</p>
+                </div>
+            </form>
+
+            <div id="messageArea"></div>
+        </div>
+    </div>
+
+    <div class="developer-credit">
+        تم التطوير بواسطة حازم احمد
+    </div>
+
+    <script>
+        // Check authentication
+        window.onload = function() {
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            const username = sessionStorage.getItem('adminUsername');
+            
+            if (!isLoggedIn) {
+                window.location.href = '?page=login';
+                return;
+            }
+            
+            document.getElementById('currentUser').textContent = username || 'الادمن';
+            document.getElementById('currentUsername').value = username || '';
+        };
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            sessionStorage.removeItem('adminUsername');
+            window.location.href = '?page=login';
+        }
+
+        // Add admin form handler
+        document.getElementById('addAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentUsername = document.getElementById('currentUsername').value.trim();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (!currentUsername || !currentPassword || !newUsername || !newPassword || !confirmPassword) {
+                showMessage('يرجى ملء جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showMessage('كلمة المرور وتأكيد كلمة المرور غير متطابقين', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showMessage('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+                return;
+            }
+            
+            if (newUsername.length < 3) {
+                showMessage('اسم المستخدم يجب أن يكون 3 أحرف على الأقل', 'error');
+                return;
+            }
+            
+            // Show loading
+            const loading = document.getElementById('loading');
+            const messageArea = document.getElementById('messageArea');
+            loading.style.display = 'block';
+            messageArea.innerHTML = '';
+            
+            // Call server function
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    loading.style.display = 'none';
+                    
+                    if (result.success) {
+                        showMessage(result.message, 'success');
+                        // Clear form
+                        document.getElementById('newUsername').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                        document.getElementById('currentPassword').value = '';
+                        
+                        // Update admin list display
+                        setTimeout(() => {
+                            updateAdminList(newUsername);
+                        }, 1000);
+                    } else {
+                        showMessage(result.message, 'error');
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    loading.style.display = 'none';
+                    showMessage('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.', 'error');
+                    console.error('Add admin error:', error);
+                })
+                .addNewAdmin(currentUsername, currentPassword, newUsername, newPassword);
+        });
+
+        // Show message function
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+            
+            messageArea.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="${icon}"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        // Update admin list display
+        function updateAdminList(newUsername) {
+            const adminList = document.querySelector('.admin-list');
+            const newAdminItem = document.createElement('div');
+            newAdminItem.className = 'admin-item';
+            newAdminItem.innerHTML = `
+                <i class="fas fa-user-shield"></i>
+                ${newUsername}
+            `;
+            adminList.appendChild(newAdminItem);
+        }
+
+        // Password strength indicator
+        document.getElementById('newPassword').addEventListener('input', function() {
+            const password = this.value;
+            const strength = getPasswordStrength(password);
+            
+            // You can add visual feedback here if needed
+        });
+
+        function getPasswordStrength(password) {
+            if (password.length < 6) return 'ضعيف';
+            if (password.length >= 8 && /\d/.test(password) && /[a-zA-Z]/.test(password)) {
+                return 'قوي';
+            }
+            return 'متوسط';
+        }
+    </script>
+</body>
+</html>
